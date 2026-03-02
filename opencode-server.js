@@ -113,7 +113,8 @@ function getSessionMessages(sessionId) {
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
-  return entries;
+  // 只返回最近的20条消息，避免数据量过大导致前端卡死
+  return entries.slice(0, 20);
 }
 
 /**
@@ -226,12 +227,17 @@ function sendToClients(event, data) {
 /**
  * 获取最近活跃的会话数据（按时间倒序）
  */
-function getRecentRequestEntries(limit = 100) {
+function getRecentRequestEntries(limit = 20) {
   const activeSessions = getActiveSessions(5);
   const allEntries = [];
   
   for (const session of activeSessions) {
-    const messages = getMessages(session.id);
+    let messages = getMessages(session.id);
+    
+    // 只取最近的几条消息，避免处理过多数据
+    if (messages.length > 10) {
+      messages = messages.slice(-10);
+    }
     
     // 预加载所有 parts
     const allParts = {};
@@ -242,7 +248,7 @@ function getRecentRequestEntries(limit = 100) {
     // 记录上一轮的historyMessages长度
     let prevHistoryLength = 0;
     
-    // 为每个会话构建历史消息
+    // 为每个会话构建历史消息（只处理最近的几条）
     for (let i = 0; i < messages.length; i++) {
       const msg = messages[i];
       const parts = allParts[msg.id];
