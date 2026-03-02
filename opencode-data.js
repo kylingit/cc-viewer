@@ -393,14 +393,19 @@ export function convertPartToContent(part) {
  * @param {array} historyMessages - 历史消息（可选，用于助手消息补充历史）
  */
 export function convertMessage(msg, parts = [], historyMessages = []) {
+  // 构建agent信息（OpenCode特有）
+  const agentInfo = msg.agent || msg.mode || 'unknown';
+  const modelInfo = msg.modelID || 'unknown';
+  const providerInfo = msg.providerID || 'unknown';
+  
   // 构建请求体
   const body = {
     model: msg.modelID,
     messages: [],
     stream: true,
-    // OpenCode 模式下 System Prompt 内置在 Agent 定义中
-    system: 'OpenCode Agent - System prompt not available in data',
-    // OpenCode 工具定义请参考 Agent 配置
+    // 根据实际数据动态生成agent信息
+    system: `OpenCode Agent Configuration\n\nAgent: ${agentInfo}\nModel: ${modelInfo}\nProvider: ${providerInfo}\n\nNote: System prompt and tools are built-in to the agent definition.`,
+    // Tools list not available in OpenCode data
     tools: []
   };
   
