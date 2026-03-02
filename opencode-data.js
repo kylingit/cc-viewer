@@ -399,7 +399,7 @@ export function convertMessage(msg, parts = [], historyMessages = []) {
     messages: [],
     stream: true,
     // OpenCode 模式下 System Prompt 内置在 Agent 定义中
-    system: 'OpenCode Agent - System prompt not available in data'
+    system: 'OpenCode Agent - System prompt not available in data',
     // OpenCode 工具定义请参考 Agent 配置
     tools: []
   };
