@@ -51,10 +51,10 @@ function getSessionMessages(sessionId) {
   let messages = getMessages(sessionId);
   const entries = [];
   // 确保包含完整的对话轮次
-  if (messages.length > 20) {
+  if (messages.length > 10) {
     let userCount = 0;
     let startIndex = messages.length;
-    for (let i = messages.length - 1; i >= 0 && userCount < 5; i--) {
+    for (let i = messages.length - 1; i >= 0 && userCount < 2; i--) {
       if (messages[i].role === 'user') {
         userCount++;
         startIndex = i;
@@ -240,7 +240,7 @@ function sendToClients(event, data) {
 /**
  * 获取最近活跃的会话数据（按时间倒序）
  */
-function getRecentRequestEntries(limit = 20) {
+function getRecentRequestEntries(limit = 10) {
   const activeSessions = getActiveSessions(5);
   const allEntries = [];
   
@@ -248,11 +248,11 @@ function getRecentRequestEntries(limit = 20) {
     let messages = getMessages(session.id);
     
     // 确保包含完整的对话轮次（user+assistant配对）
-    if (messages.length > 20) {
+    if (messages.length > 10) {
       // 从末尾向前查找，找到最近的5个完整对话轮次（10条消息）
       let userCount = 0;
       let startIndex = messages.length;
-      for (let i = messages.length - 1; i >= 0 && userCount < 5; i--) {
+      for (let i = messages.length - 1; i >= 0 && userCount < 2; i--) {
         if (messages[i].role === 'user') {
           userCount++;
           startIndex = i;
