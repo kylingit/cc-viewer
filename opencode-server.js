@@ -48,8 +48,21 @@ const MIME_TYPES = {
  * 获取会话的所有消息（转换为 cc-viewer 格式）
  */
 function getSessionMessages(sessionId) {
-  const messages = getMessages(sessionId);
+  let messages = getMessages(sessionId);
   const entries = [];
+  // 确保包含完整的对话轮次
+  if (messages.length > 20) {
+    let userCount = 0;
+    let startIndex = messages.length;
+    for (let i = messages.length - 1; i >= 0 && userCount < 5; i--) {
+      if (messages[i].role === 'user') {
+        userCount++;
+        startIndex = i;
+      }
+    }
+    messages = messages.slice(startIndex);
+  }
+  
   
   // 预加载所有 parts（避免重复查询）
   const allParts = {};
@@ -234,11 +247,19 @@ function getRecentRequestEntries(limit = 20) {
   for (const session of activeSessions) {
     let messages = getMessages(session.id);
     
-    // 只取最近的几条消息，避免处理过多数据
-    if (messages.length > 10) {
-      messages = messages.slice(-10);
+    // 确保包含完整的对话轮次（user+assistant配对）
+    if (messages.length > 20) {
+      // 从末尾向前查找，找到最近的5个完整对话轮次（10条消息）
+      let userCount = 0;
+      let startIndex = messages.length;
+      for (let i = messages.length - 1; i >= 0 && userCount < 5; i--) {
+        if (messages[i].role === 'user') {
+          userCount++;
+          startIndex = i;
+        }
+      }
+      messages = messages.slice(startIndex);
     }
-    
     // 预加载所有 parts
     const allParts = {};
     for (const msg of messages) {
