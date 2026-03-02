@@ -419,7 +419,8 @@ export function convertMessage(msg, parts = [], historyMessages = []) {
       .map(p => p.text)
       .join('\n');
     if (userContent) {
-      body.messages = [{ role: 'user', content: userContent }];
+      // 使用数组格式，与服务器端历史消息保持一致
+      body.messages = [{ role: 'user', content: [{ type: 'text', text: userContent }] }];
     }
   }
   
