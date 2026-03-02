@@ -397,7 +397,11 @@ export function convertMessage(msg, parts = [], historyMessages = []) {
   const body = {
     model: msg.modelID,
     messages: [],
-    stream: true
+    stream: true,
+    // OpenCode 模式下 System Prompt 内置在 Agent 定义中
+    system: 'OpenCode Agent - System prompt not available in data'
+    // OpenCode 工具定义请参考 Agent 配置
+    tools: []
   };
   
   // 构建响应内容（过滤掉 null）

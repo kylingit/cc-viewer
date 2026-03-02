@@ -117,6 +117,99 @@ function getSessionMessages(sessionId) {
 }
 
 /**
+ * 构建 mainAgentSessions 数据（用于 ChatView 组件）
+ * 将 OpenCode 的 session 数据转换为 mainAgentSessions 格式
+ * 
+ * mainAgentSessions 结构：
+ * [{
+ *   userId: string | null,
+ *   messages: Array<Message>,  // 完整的历史对话
+ *   response: Object,          // 最后的响应
+ *   entryTimestamp: string
+ * }]
+ */
+function buildMainAgentSessions(sessionId) {
+  if (!sessionId) return [];
+  
+  const messages = getMessages(sessionId);
+  if (messages.length === 0) return [];
+  
+  // 预加载所有 parts
+  const allParts = {};
+  for (const msg of messages) {
+    allParts[msg.id] = getParts(msg.id);
+  }
+  
+  // 构建完整的历史消息
+  const historyMessages = [];
+  for (const msg of messages) {
+    const parts = allParts[msg.id];
+    
+    if (msg.role === 'user') {
+      const userContent = parts
+        .filter(p => p.type === 'text' && !p.synthetic)
+        .map(p => p.text)
+        .join('\n');
+      if (userContent) {
+        historyMessages.push({
+          role: 'user',
+          content: [{ type: 'text', text: userContent }],
+          _timestamp: msg.timeCreated || msg.time?.created
+        });
+      }
+    } else if (msg.role === 'assistant') {
+      const content = parts
+        .map(p => convertPartToContent(p))
+        .filter(Boolean);
+      
+      if (content.length > 0) {
+        historyMessages.push({
+          role: 'assistant',
+          content,
+          _timestamp: msg.timeCreated || msg.time?.completed
+        });
+      }
+    }
+  }
+  
+  // 获取最后的响应（最后一条助手消息）
+  const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+  let lastResponse = null;
+  if (lastAssistantMsg) {
+    const lastParts = allParts[lastAssistantMsg.id];
+    const lastContent = lastParts
+      .map(p => convertPartToContent(p))
+      .filter(Boolean);
+    
+    lastResponse = {
+      status: 200,
+      statusText: 'OK',
+      body: {
+        id: lastAssistantMsg.id,
+        role: 'assistant',
+        content: lastContent,
+        model: lastAssistantMsg.modelID,
+        stop_reason: lastAssistantMsg.finish || 'end_turn',
+        usage: {
+          input_tokens: lastAssistantMsg.tokens?.input || 0,
+          output_tokens: lastAssistantMsg.tokens?.output || 0,
+          cache_read_input_tokens: lastAssistantMsg.tokens?.cache?.read || 0,
+          cache_creation_input_tokens: lastAssistantMsg.tokens?.cache?.write || 0
+        }
+      }
+    };
+  }
+  
+  // 返回单个 session
+  return [{
+    userId: null, // OpenCode 暂时没有 user_id 概念
+    messages: historyMessages,
+    response: lastResponse,
+    entryTimestamp: messages[messages.length - 1]?.timeCreated || new Date().toISOString()
+  }];
+}
+
+/**
  * 发送 SSE 事件到所有客户端
  */
 function sendToClients(event, data) {
