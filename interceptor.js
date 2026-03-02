@@ -629,6 +629,9 @@ export function setupInterceptor() {
 setupInterceptor();
 
 // 等待日志文件初始化完成后启动 Web Viewer 服务
-_initPromise.then(() => import('./server.js')).catch((err) => {
-  console.error('[CC-Viewer] Failed to start viewer server:', err);
-});
+// 如果是 ccv --c 通过 proxy 模式启动的，外层已有 server，跳过
+if (!process.env.CCV_PROXY_MODE) {
+  _initPromise.then(() => import('./server.js')).catch((err) => {
+    console.error('[CC-Viewer] Failed to start viewer server:', err);
+  });
+}

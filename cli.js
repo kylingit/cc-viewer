@@ -173,6 +173,7 @@ async function runProxyCommand(args) {
       }
     }
     env.ANTHROPIC_BASE_URL = `http://127.0.0.1:${proxyPort}`;
+    env.CCV_PROXY_MODE = '1'; // 告诉 interceptor.js 不要再启动 server
 
     const settingsJson = JSON.stringify({
       env: {
@@ -199,12 +200,66 @@ async function runProxyCommand(args) {
   }
 }
 
+async function runCliMode() {
+  const nativePath = resolveNativePath();
+  if (!nativePath) {
+    console.error(t('cli.cMode.notFound'));
+    process.exit(1);
+  }
+
+  console.log(t('cli.cMode.starting'));
+
+  // 1. 启动代理
+  const { startProxy } = await import('./proxy.js');
+  const proxyPort = await startProxy();
+
+  // 2. 设置 CLI 模式标记，启动 HTTP 服务器
+  process.env.CCV_CLI_MODE = '1';
+  const serverMod = await import('./server.js');
+
+  // 等待服务器启动完成
+  await new Promise(resolve => {
+    const check = () => {
+      const port = serverMod.getPort();
+      if (port) resolve(port);
+      else setTimeout(check, 100);
+    };
+    setTimeout(check, 200);
+  });
+
+  const port = serverMod.getPort();
+
+  // 3. 启动 PTY 中的 claude
+  const { spawnClaude, killPty } = await import('./pty-manager.js');
+  await spawnClaude(proxyPort, process.cwd());
+
+  // 4. 自动打开浏览器
+  const url = `http://127.0.0.1:${port}`;
+  try {
+    const cmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+    const { execSync } = await import('node:child_process');
+    execSync(`${cmd} ${url}`, { stdio: 'ignore', timeout: 5000 });
+  } catch {}
+
+  console.log(`CC Viewer: ${url}`);
+
+  // 5. 注册退出处理
+  const cleanup = () => {
+    killPty();
+    serverMod.stopViewer();
+    process.exit();
+  };
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+}
+
 // === 主逻辑 ===
 
 const args = process.argv.slice(2);
 const isUninstall = args.includes('--uninstall');
 const isHelp = args.includes('--help') || args.includes('-h') || args[0] === 'help';
 const isVersion = args.includes('--v') || args.includes('--version') || args.includes('-v');
+const isCliMode = args.includes('--c');
 
 if (isHelp) {
   console.log(t('cli.help'));
@@ -221,7 +276,12 @@ if (isVersion) {
   process.exit(0);
 }
 
-if (args[0] === 'run') {
+if (isCliMode) {
+  runCliMode().catch(err => {
+    console.error('CLI mode error:', err);
+    process.exit(1);
+  });
+} else if (args[0] === 'run') {
   runProxyCommand(args);
 } else if (isUninstall) {
   const cliResult = removeCliJsInjection();

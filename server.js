@@ -11,6 +11,7 @@ import { t, detectLanguage } from './i18n.js';
 import { checkAndUpdate } from './updater.js';
 
 const PREFS_FILE = join(LOG_DIR, 'preferences.json');
+const isCliMode = process.env.CCV_CLI_MODE === '1';
 
 
 // macOS user profile (avatar + display name), cached once
@@ -497,6 +498,13 @@ function handleRequest(req, res) {
     return;
   }
 
+  // CLI 模式检测
+  if (url === '/api/cli-mode' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ cliMode: isCliMode }));
+    return;
+  }
+
   // 列出本地日志文件（按项目分组，遍历项目子目录）
   if (url === '/api/local-logs' && method === 'GET') {
     try {
@@ -712,6 +720,10 @@ export async function startViewer() {
         } catch { }
         startWatching();
         startStatsWorker();
+        // CLI 模式下启动 WebSocket 服务
+        if (isCliMode) {
+          setupTerminalWebSocket(currentServer);
+        }
         resolve(server);
       });
 
@@ -726,6 +738,64 @@ export async function startViewer() {
 
     tryListen(START_PORT);
   });
+}
+
+async function setupTerminalWebSocket(httpServer) {
+  try {
+    const { WebSocketServer } = await import('ws');
+    const { writeToPty, resizePty, onPtyData, onPtyExit, getPtyState, getOutputBuffer } = await import('./pty-manager.js');
+
+    const wss = new WebSocketServer({ server: httpServer, path: '/ws/terminal' });
+
+    wss.on('connection', (ws) => {
+      // 发送当前 PTY 状态
+      const state = getPtyState();
+      ws.send(JSON.stringify({ type: 'state', ...state }));
+
+      // 发送历史输出缓冲
+      const buffer = getOutputBuffer();
+      if (buffer) {
+        ws.send(JSON.stringify({ type: 'data', data: buffer }));
+      }
+
+      // PTY 输出 → WebSocket
+      const removeDataListener = onPtyData((data) => {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({ type: 'data', data }));
+        }
+      });
+
+      // PTY 退出 → WebSocket
+      const removeExitListener = onPtyExit((exitCode) => {
+        if (ws.readyState === 1) {
+          ws.send(JSON.stringify({ type: 'exit', exitCode }));
+        }
+      });
+
+      // WebSocket → PTY
+      ws.on('message', (raw) => {
+        try {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'input') {
+            writeToPty(msg.data);
+          } else if (msg.type === 'resize') {
+            resizePty(msg.cols, msg.rows);
+          }
+        } catch {}
+      });
+
+      ws.on('close', () => {
+        removeDataListener();
+        removeExitListener();
+      });
+    });
+  } catch (err) {
+    console.error('[CC Viewer] Failed to setup terminal WebSocket:', err.message);
+  }
+}
+
+export function getPort() {
+  return actualPort;
 }
 
 export function stopViewer() {

@@ -1,0 +1,12 @@
+.terminalPanel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+}
+
+.terminalContainer {
+  flex: 1;
+  overflow: hidden;
+  padding: 4px 8px;
+}

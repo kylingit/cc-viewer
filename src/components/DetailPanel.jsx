@@ -7,6 +7,7 @@ import { t } from '../i18n';
 import { formatTokenCount, stripPrivateKeys, hasClaudeMdReminder, isClaudeMdReminder, hasSkillsReminder, isSkillsReminder } from '../utils/helpers';
 import { classifyRequest } from '../utils/requestType';
 import { isMainAgent } from '../utils/contentFilter';
+import ContextTab from './ContextTab';
 import styles from './DetailPanel.module.css';
 
 const { Text, Paragraph } = Typography;
@@ -532,6 +533,15 @@ class DetailPanel extends React.Component {
           </div>
         ),
       },
+      {
+        key: 'context',
+        label: 'Context',
+        children: (
+          <div className={styles.tabContent} style={{ height: 'calc(100vh - 220px)', minHeight: 400 }}>
+            <ContextTab body={request.body} response={request.response?.body} />
+          </div>
+        ),
+      },
     ];
 
     const usage = request.response?.body?.usage;
@@ -593,19 +603,6 @@ class DetailPanel extends React.Component {
           onChange={onTabChange}
           items={tabItems}
           size="small"
-          tabBarExtraContent={
-            this.props.onViewInChat && (
-              <button
-                className={styles.viewInChatBtn}
-                onClick={this.props.onViewInChat}
-              >
-                {t('ui.viewInChat')}
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ marginLeft: 4 }}>
-                  <path d="M4.5 2.5L8 6L4.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            )
-          }
         />
       </div>
     );

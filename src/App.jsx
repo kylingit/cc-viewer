@@ -47,6 +47,8 @@ class App extends React.Component {
       fileLoadingCount: 0,
       selectedLogs: new Set(),   // Set<file>
       githubStars: null,
+      cliMode: false,
+      terminalVisible: true,
     };
     this.eventSource = null;
     this._autoSelectTimer = null;
@@ -93,6 +95,16 @@ class App extends React.Component {
     fetch('https://api.github.com/repos/weiesky/cc-viewer')
       .then(res => res.json())
       .then(data => { if (data.stargazers_count != null) this.setState({ githubStars: data.stargazers_count }); })
+      .catch(() => { });
+
+    // 检测 CLI 模式
+    fetch('/api/cli-mode')
+      .then(res => res.json())
+      .then(data => {
+        if (data.cliMode) {
+          this.setState({ cliMode: true, viewMode: 'chat' });
+        }
+      })
       .catch(() => { });
 
     // 检查是否是通过 ?logfile= 打开的历史日志
@@ -757,11 +769,14 @@ class App extends React.Component {
               onFilterIrrelevantChange={this.handleFilterIrrelevantChange}
               updateInfo={this.state.updateInfo}
               onDismissUpdate={() => this.setState({ updateInfo: null })}
+              cliMode={this.state.cliMode}
+              terminalVisible={this.state.terminalVisible}
+              onToggleTerminal={() => this.setState(prev => ({ terminalVisible: !prev.terminalVisible }))}
             />
           </Layout.Header>
 
           <Layout.Content className={styles.content}>
-            {viewMode === 'raw' ? (
+            {viewMode === 'raw' && (
               filteredRequests.length === 0 ? (
                 <div className={styles.guideContainer}>
                   <div className={styles.guideContent}>
@@ -834,9 +849,10 @@ class App extends React.Component {
                 </div>
               </div>
               )
-            ) : (
-              <ChatView requests={filteredRequests} mainAgentSessions={mainAgentSessions} userProfile={this.state.userProfile} collapseToolResults={this.state.collapseToolResults} expandThinking={this.state.expandThinking} onViewRequest={this.handleViewRequest} scrollToTimestamp={this.state.chatScrollToTs} onScrollTsDone={() => this.setState({ chatScrollToTs: null })} />
             )}
+            <div style={{ display: viewMode === 'chat' ? 'flex' : 'none', height: '100%', flexDirection: 'column' }}>
+              <ChatView requests={filteredRequests} mainAgentSessions={mainAgentSessions} userProfile={this.state.userProfile} collapseToolResults={this.state.collapseToolResults} expandThinking={this.state.expandThinking} onViewRequest={this.handleViewRequest} scrollToTimestamp={this.state.chatScrollToTs} onScrollTsDone={() => this.setState({ chatScrollToTs: null })} cliMode={this.state.cliMode} terminalVisible={this.state.terminalVisible} />
+            </div>
           </Layout.Content>
           <div className={styles.footer}>
             <div className={styles.footerRight}>

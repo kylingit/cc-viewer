@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.4.2 (2026-03-02)
+
+- Fix: prevent redundant cc-viewer server startup when Claude Code is launched via `ccv --c` or `ccv run` proxy mode (CCV_PROXY_MODE env guard)
+
+## 1.4.1 (2026-03-02)
+
+- Feat: Context Tab v2 — merged from PR #11, turn-based conversation view with collapsible history turns and current turn auto-selection
+- Build: rebuild dist with latest source changes
+
+## 1.4.0 (2026-03-02)
+
+- Feat: CLI mode — embedded PTY terminal panel with split-pane layout, WebSocket-based input/output
+- Feat: PTY permission prompt detection — terminal prompts rendered as interactive chat bubbles with clickable options
+- Feat: PTY prompt history — answered prompts stay in chat (greyed out with selected option highlighted), dismissed prompts auto-fade
+- Feat: last response suggestion ghost text — assistant's final response pre-fills chat input as grey placeholder; Tab to accept, type to dismiss
+- Feat: terminal-visible suggestion chip — when terminal panel is open, suggestion appears as clickable bar that sends to PTY
+- Feat: sticky-to-bottom auto-restore — scrolling within 5px of bottom automatically re-enables sticky mode
+- Feat: hide terminal button in raw (network) view mode
+- Fix: raw-to-chat scroll positioning — switching from raw mode with a selected request now correctly scrolls to the corresponding chat message
+- i18n: added `ui.chatInput.hintTab` entry for all supported languages
+
+## 1.3.9 (2026-03-02)
+
+- Feat: Context Tab — turn-based conversation view with history collapsing and current turn auto-selection
+- Feat: Context Tab — response inheritance: last turn's assistant blocks overridden with actual API response content
+- Feat: Context Tab — timestamps (HH:MM:SS) shown in sidebar items and content area role headers
+- Feat: Context Tab — thinking blocks (collapsible), tool_use/tool_result blocks with JSON viewer, per-block translation
+- Feat: Context Tab — system blocks and tools section rendered with block-level components
+- Feat: Language selector shows full language name instead of short code
+- Fix: removed "View in conversation" button from Context tab bar extra content
+- Chore: add .idea/ to .gitignore
+
 ## 1.3.8 (2026-03-01)
 
 - Feat: inflight request detection — write request entry before fetch, deduplicate by timestamp+url on read; live spinner and popover for in-flight requests

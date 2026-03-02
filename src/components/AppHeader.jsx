@@ -1,6 +1,6 @@
 import React from 'react';
 import { Space, Tag, Button, Badge, Typography, Dropdown, Popover, Modal, Collapse, Drawer, Switch, Tabs, Spin, Tooltip } from 'antd';
-import { MessageOutlined, FileTextOutlined, ImportOutlined, DownOutlined, DashboardOutlined, ExportOutlined, DownloadOutlined, SettingOutlined, BarChartOutlined } from '@ant-design/icons';
+import { MessageOutlined, FileTextOutlined, ImportOutlined, DownOutlined, DashboardOutlined, ExportOutlined, DownloadOutlined, SettingOutlined, BarChartOutlined, CodeOutlined } from '@ant-design/icons';
 import { formatTokenCount, computeTokenStats, computeCacheRebuildStats, computeToolUsageStats, computeSkillUsageStats } from '../utils/helpers';
 import { isSystemText, classifyUserContent, isMainAgent } from '../utils/contentFilter';
 import { classifyRequest, formatRequestTag } from '../utils/requestType';
@@ -626,7 +626,7 @@ class AppHeader extends React.Component {
   }
 
   render() {
-    const { requestCount, requests = [], viewMode, cacheType, onToggleViewMode, onImportLocalLogs, onLangChange, isLocalLog, localLogFile, projectName, collapseToolResults, onCollapseToolResultsChange, expandThinking, onExpandThinkingChange, expandDiff, onExpandDiffChange, filterIrrelevant, onFilterIrrelevantChange, updateInfo, onDismissUpdate } = this.props;
+    const { requestCount, requests = [], viewMode, cacheType, onToggleViewMode, onImportLocalLogs, onLangChange, isLocalLog, localLogFile, projectName, collapseToolResults, onCollapseToolResultsChange, expandThinking, onExpandThinkingChange, expandDiff, onExpandDiffChange, filterIrrelevant, onFilterIrrelevantChange, updateInfo, onDismissUpdate, cliMode, terminalVisible, onToggleTerminal } = this.props;
     const { countdownText } = this.state;
 
     const menuItems = [
@@ -765,9 +765,19 @@ class AppHeader extends React.Component {
             }}
           >
             <span className={styles.langSelector}>
-              {LANG_OPTIONS.find(o => o.value === getLang())?.short || 'zh'}
+              {LANG_OPTIONS.find(o => o.value === getLang())?.label || '简体中文'}
             </span>
           </Dropdown>
+          {cliMode && viewMode === 'chat' && (
+            <Button
+              type={terminalVisible ? 'primary' : 'default'}
+              ghost={terminalVisible}
+              icon={<CodeOutlined />}
+              onClick={onToggleTerminal}
+            >
+              {t('ui.terminal')}
+            </Button>
+          )}
           <Button
             type={viewMode === 'raw' ? 'primary' : 'default'}
             icon={viewMode === 'raw' ? <MessageOutlined /> : <FileTextOutlined />}

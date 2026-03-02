@@ -217,6 +217,55 @@ class ChatMessage extends React.Component {
       );
     }
 
+    // AskUserQuestion: 问卷卡片
+    if (tu.name === 'AskUserQuestion') {
+      const questions = inp.questions || [];
+      return (
+        <div key={tu.id} className={styles.askQuestionBox}>
+          {questions.map((q, qi) => (
+            <div key={qi} className={qi < questions.length - 1 ? styles.questionSpacing : undefined}>
+              {q.header && <span className={styles.askQuestionHeader}>{q.header}</span>}
+              <div className={styles.askQuestionText}>{q.question}</div>
+              <div className={styles.optionList}>
+                {q.options && q.options.map((opt, oi) => (
+                  <div key={oi} className={styles.askOptionItem}>
+                    ○ {opt.label}{opt.description && <span className={styles.optionDesc}>— {opt.description}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // EnterPlanMode: 进入计划模式
+    if (tu.name === 'EnterPlanMode') {
+      return (
+        <div key={tu.id} className={styles.planModeBox}>
+          <span className={styles.planModeLabel}>{t('ui.enterPlanMode')}</span>
+        </div>
+      );
+    }
+
+    // ExitPlanMode: 计划就绪
+    if (tu.name === 'ExitPlanMode') {
+      const prompts = inp.allowedPrompts || [];
+      return (
+        <div key={tu.id} className={styles.planModeBox}>
+          <span className={styles.planModeLabel}>{t('ui.exitPlanMode')}</span>
+          {prompts.length > 0 && (
+            <div className={styles.planModePermissions}>
+              <div className={styles.planModePermLabel}>{t('ui.allowedPrompts')}</div>
+              {prompts.map((p, pi) => (
+                <div key={pi} className={styles.askOptionItem}>• {p.prompt || p.tool}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // Default: structured key-value display
     let toolLabel = tu.name;
     const keys = Object.keys(inp);
