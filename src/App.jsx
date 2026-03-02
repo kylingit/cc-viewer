@@ -165,7 +165,7 @@ class App extends React.Component {
               this.animateLoadingCount(entries.length, () => {
                 this.setState({
                   requests: entries,
-                  selectedIndex: filtered.length > 0 ? filtered.length - 1 : null,
+                  selectedIndex: filtered.length > 0 ? 0 : null,
                   mainAgentSessions,
                   fileLoading: false,
                   fileLoadingCount: 0,
@@ -209,7 +209,7 @@ class App extends React.Component {
             const filtered = filterRelevantRequests(entries);
             this.setState({
               requests: entries,
-              selectedIndex: filtered.length > 0 ? filtered.length - 1 : null,
+              selectedIndex: filtered.length > 0 ? 0 : null,
               mainAgentSessions,
               fileLoading: false,
               fileLoadingCount: 0,
@@ -301,7 +301,7 @@ class App extends React.Component {
             this.setState(s => {
               if (s.selectedIndex === null && s.requests.length > 0) {
                 const filtered = s.showAll ? s.requests : filterRelevantRequests(s.requests);
-                return filtered.length > 0 ? { selectedIndex: filtered.length - 1 } : null;
+                return filtered.length > 0 ? { selectedIndex: 0 } : null;
               }
               return null;
             });
@@ -442,7 +442,7 @@ class App extends React.Component {
           const filtered = prev.showAll ? prev.requests : filterRelevantRequests(prev.requests);
           return {
             viewMode: newMode,
-            selectedIndex: filtered.length > 0 ? filtered.length - 1 : null,
+            selectedIndex: filtered.length > 0 ? 0 : null,
             scrollCenter: true,
           };
         }
@@ -521,7 +521,7 @@ class App extends React.Component {
       const newFiltered = newShowAll ? prev.requests : filterRelevantRequests(prev.requests);
       return {
         showAll: newShowAll,
-        selectedIndex: newFiltered.length > 0 ? newFiltered.length - 1 : null,
+        selectedIndex: newFiltered.length > 0 ? 0 : null,
       };
     });
     fetch('/api/preferences', {
@@ -679,7 +679,7 @@ class App extends React.Component {
             if (this.eventSource) { this.eventSource.close(); this.eventSource = null; }
             this.setState({
               requests: entries,
-              selectedIndex: filtered.length > 0 ? filtered.length - 1 : null,
+              selectedIndex: filtered.length > 0 ? 0 : null,
               mainAgentSessions,
               importModalVisible: false,
               fileLoading: false,

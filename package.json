@@ -1,18 +1,21 @@
 {
   "name": "cc-viewer",
-  "version": "1.3.8",
-  "description": "Claude Code Logger visualization management tool",
+  "version": "1.3.8-opencode",
+  "description": "Claude Code / OpenCode Logger visualization management tool",
   "license": "MIT",
   "main": "server.js",
   "type": "module",
   "exports": {
     ".": "./server.js",
     "./server.js": "./server.js",
-    "./interceptor.js": "./interceptor.js"
+    "./interceptor.js": "./interceptor.js",
+    "./opencode-data.js": "./opencode-data.js",
+    "./opencode-server.js": "./opencode-server.js"
   },
   "author": "weiesky",
   "bin": {
-    "ccv": "cli.js"
+    "ccv": "cli.js",
+    "ocv": "ocv.js"
   },
   "scripts": {
     "dev": "vite",
@@ -21,7 +24,8 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "claude code"
+    "claude code",
+    "opencode"
   ],
   "contributors": [
     {
@@ -44,14 +48,18 @@
     "dist/",
     "server.js",
     "cli.js",
+    "ocv.js",
     "proxy.js",
     "interceptor.js",
     "i18n.js",
     "findcc.js",
     "stats-worker.js",
     "updater.js",
+    "opencode-data.js",
+    "opencode-server.js",
     "locales/",
-    "concepts/"
+    "concepts/",
+    "contrib/"
   ],
   "devDependencies": {
     "react": "^18.3.1",

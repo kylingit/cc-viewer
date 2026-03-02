@@ -21,6 +21,7 @@ class DetailPanel extends React.Component {
       responseHeadersExpanded: false,
       diffTooltipDismissed: false,
       reminderFilters: null,
+      showOnlyNewMessages: true,  // 默认只显示新增消息
     };
   }
 
@@ -223,7 +224,7 @@ class DetailPanel extends React.Component {
   }
 
   renderBody(data, type) {
-    const { bodyViewMode } = this.state;
+    const { bodyViewMode, showOnlyNewMessages } = this.state;
     if (data == null) return <Text type="secondary">{t('ui.noBody')}</Text>;
 
     if (typeof data === 'string' && data.includes('Streaming Response')) {
@@ -234,7 +235,32 @@ class DetailPanel extends React.Component {
       );
     }
 
-    const clean = typeof data === 'object' ? stripPrivateKeys(data) : data;
+    let clean = typeof data === 'object' ? stripPrivateKeys(data) : data;
+    
+    // 对于Request tab，处理新增消息的显示
+    if (type === 'request' && typeof clean === 'object' && clean.messages && clean._newMessagesStartIndex != null) {
+      const newStart = clean._newMessagesStartIndex;
+      const newCount = clean._newMessagesCount || 1;
+      const totalMessages = clean.messages.length;
+      
+      if (showOnlyNewMessages && newStart > 0) {
+        // 只显示新增消息，并添加统计信息
+        clean = {
+          ...clean,
+          messages: clean.messages.slice(newStart),
+          _historyCount: newStart,  // 隐藏的历史消息数量
+          _showingNew: true,
+        };
+      } else {
+        // 显示全部消息，标记新增部分
+        clean = {
+          ...clean,
+          _newMessageRange: `messages[${newStart}:${newStart + newCount}]`,
+          _totalMessages: totalMessages,
+        };
+      }
+    }
+
     const isJsonMode = bodyViewMode[type] === 'json';
     const expandNode = this.getRequestExpandNode(clean, type);
 
@@ -254,7 +280,6 @@ class DetailPanel extends React.Component {
       </div>
     );
   }
-
   getPrevMainAgentRequest() {
     const { requests, selectedIndex } = this.props;
     if (!requests || selectedIndex == null) return null;
@@ -448,7 +473,16 @@ class DetailPanel extends React.Component {
                   >
                     {t('ui.copy')}
                   </Button>
-                </Space>
+                  {request.body && request.body._newMessagesStartIndex != null && request.body._newMessagesStartIndex > 0 && (
+                    <Button
+                      size="small"
+                      type={this.state.showOnlyNewMessages ? 'primary' : 'default'}
+                      onClick={() => this.setState(prev => ({ showOnlyNewMessages: !prev.showOnlyNewMessages }))}
+                    >
+                      {this.state.showOnlyNewMessages ? '仅新增' : '全部'}
+                    </Button>
+                  )}
+                              </Space>
               </div>
               {this.renderBody(request.body, 'request')}
             </div>
