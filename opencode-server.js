@@ -54,7 +54,7 @@ function getSessionMessages(sessionId) {
   if (messages.length > 10) {
     let userCount = 0;
     let startIndex = messages.length;
-    for (let i = messages.length - 1; i >= 0 && userCount < 2; i--) {
+    for (let i = messages.length - 1; i >= 0 && userCount < 1; i--) {
       if (messages[i].role === 'user') {
         userCount++;
         startIndex = i;
@@ -240,7 +240,7 @@ function sendToClients(event, data) {
 /**
  * 获取最近活跃的会话数据（按时间倒序）
  */
-function getRecentRequestEntries(limit = 10) {
+function getRecentRequestEntries(limit = 5) {
   const activeSessions = getActiveSessions(5);
   const allEntries = [];
   
@@ -252,7 +252,7 @@ function getRecentRequestEntries(limit = 10) {
       // 从末尾向前查找，找到最近的5个完整对话轮次（10条消息）
       let userCount = 0;
       let startIndex = messages.length;
-      for (let i = messages.length - 1; i >= 0 && userCount < 2; i--) {
+      for (let i = messages.length - 1; i >= 0 && userCount < 1; i--) {
         if (messages[i].role === 'user') {
           userCount++;
           startIndex = i;
